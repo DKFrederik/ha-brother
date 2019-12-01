@@ -4,24 +4,16 @@
     "step": {
       "user": {
         "title": "Brother Printer",
-        "description": "Set up Brother printe integration. If you have problems with configuration go to: https://github.com/bieniu/ha-brother",
+        "description": "Set up Brother printer integration. If you have problems with configuration go to: https://github.com/bieniu/ha-brother",
         "data": {
-          "name": "Integration name",
           "host": "Printer hostname or IP address"
         }
       }
     },
     "error": {
-      "invalid_host": "Invalid printer's hostname/IP address."
-    }
-  },
-  "options": {
-    "step": {
-      "user": {
-        "data": {
-          "scan_interval": "Scan interval [s]"
-        }
-      }
+      "wrong_address": "Nieprawidłowa nazwa hosta/adres IP drukarki.",
+      "snmp_error": "SNMP Error",
+      "unsupported_model": "Unsupported model"
     }
   }
 }

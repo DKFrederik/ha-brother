@@ -1,131 +1,60 @@
-"""Support for the Airly service."""
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
+"""Support for the Brother service."""
+import logging
+
 from homeassistant import config_entries
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_DEVICE_CLASS,
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    CONF_SCAN_INTERVAL,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
-)
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    ATTR_CAQI,
-    ATTR_CAQI_ADVICE,
-    ATTR_CAQI_DESCRIPTION,
-    ATTR_CAQI_LEVEL,
-    CONF_LANGUAGE,
-    DATA_CLIENT,
-    DEFAULT_LANGUAGE,
-    DEFAULT_NAME,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    LANGUAGE_CODES,
-)
+from .const import DOMAIN
 
-ATTR_ICON = "icon"
-ATTR_LABEL = "label"
-ATTR_LIMIT = "limit"
-ATTR_PERCENT = "percent"
-ATTR_PM1 = "PM1"
-ATTR_PM10 = "PM10"
-ATTR_PM10_LIMIT = "PM10_LIMIT"
-ATTR_PM10_PERCENT = "PM10_PERCENT"
-ATTR_PM25 = "PM25"
-ATTR_PM25_LIMIT = "PM25_LIMIT"
-ATTR_PM25_PERCENT = "PM25_PERCENT"
-ATTR_HUMIDITY = "HUMIDITY"
-ATTR_PRESSURE = "PRESSURE"
-ATTR_TEMPERATURE = "TEMPERATURE"
+ATTR_STATUS = "status"
 ATTR_UNIT = "unit"
-
-HUMI_PERCENT = "%"
-VOLUME_MICROGRAMS_PER_CUBIC_METER = "µg/m³"
-
-ATTRIBUTION = {"en": "Data provided by Airly", "pl": "Dane dostarczone przez Airly"}
+ATTR_LABEL = "label"
+ATTR_ICON = "icon"
 
 SENSOR_TYPES = {
-    ATTR_CAQI: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: None,
-        ATTR_LABEL: ATTR_CAQI,
+    ATTR_STATUS: {
+        ATTR_ICON: "icon:mdi:printer",
+        ATTR_LABEL: "Status",
         ATTR_UNIT: None,
     },
-    ATTR_CAQI_DESCRIPTION: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:card-text-outline",
-        ATTR_LABEL: ATTR_CAQI_DESCRIPTION.capitalize(),
-        ATTR_UNIT: None,
+    "printer_count": {
+        ATTR_ICON: "mdi:file-document",
+        ATTR_LABEL: "Printer Count",
+        ATTR_UNIT: "p"
     },
-    ATTR_PM1: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:blur",
-        ATTR_LABEL: ATTR_PM1,
-        ATTR_UNIT: VOLUME_MICROGRAMS_PER_CUBIC_METER,
+    "drum_remaining_life": {
+        ATTR_ICON: "mdi:chart-donut",
+        ATTR_LABEL: "Drum Remaining Life",
+        ATTR_UNIT: "%"
     },
-    ATTR_PM10: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:blur",
-        ATTR_LABEL: ATTR_PM10,
-        ATTR_UNIT: VOLUME_MICROGRAMS_PER_CUBIC_METER,
+    "printer_count": {
+        ATTR_ICON: "mdi:file-document",
+        ATTR_LABEL: "Printer Count",
+        ATTR_UNIT: "p"
     },
-    ATTR_PM25: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:blur",
-        ATTR_LABEL: "PM2.5",
-        ATTR_UNIT: VOLUME_MICROGRAMS_PER_CUBIC_METER,
-    },
-    ATTR_HUMIDITY: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-        ATTR_ICON: None,
-        ATTR_LABEL: ATTR_HUMIDITY.capitalize(),
-        ATTR_UNIT: HUMI_PERCENT,
-    },
-    ATTR_PRESSURE: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
-        ATTR_ICON: None,
-        ATTR_LABEL: ATTR_PRESSURE.capitalize(),
-        ATTR_UNIT: PRESSURE_HPA,
-    },
-    ATTR_TEMPERATURE: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_ICON: None,
-        ATTR_LABEL: ATTR_TEMPERATURE.capitalize(),
-        ATTR_UNIT: TEMP_CELSIUS,
-    },
+    "black_toner": {
+        ATTR_ICON: "mdi:flask-outline",
+        ATTR_LABEL: "Black Toner",
+        ATTR_UNIT: "%"
+    }
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY, None): cv.string,
-        vol.Required(CONF_LATITUDE): cv.latitude,
-        vol.Required(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(LANGUAGE_CODES),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
-    }
-)
-
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Add a Airly entities from a config_entry."""
-    name = config_entry.data[CONF_NAME]
+    """Add Brother entities from a config_entry."""
+    brother = hass.data[DOMAIN][config_entry.entry_id]
+    await brother.async_update()
 
-    data = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
+    name = brother.model
+
+    _LOGGER.debug(brother.model)
+    _LOGGER.debug(brother.data)
 
     sensors = []
     for sensor in SENSOR_TYPES:
-        sensors.append(AirlySensor(data, name, sensor))
+        if sensor in brother.data:
+            sensors.append(BrotherPrinterSensor(brother, name, sensor))
     async_add_entities(sensors, True)
 
 
@@ -134,12 +63,10 @@ class BrotherPrinterSensor(Entity):
 
     def __init__(self, data, name, kind):
         """Initialize."""
-        self._data = data
+        self.brother = data
         self._name = name
-        self._kind = kind
-        self._device_class = None
+        self.kind = kind
         self._state = None
-        self._icon = None
         self._unit_of_measurement = None
 
     @property
@@ -150,56 +77,33 @@ class BrotherPrinterSensor(Entity):
     @property
     def state(self):
         """Return the state."""
-        self._state = self.data[self.kind]
-        if self.kind in [ATTR_PM1, ATTR_PM25, ATTR_PM10, ATTR_PRESSURE, ATTR_CAQI]:
-            self._state = round(self._state)
-        if self.kind in [ATTR_TEMPERATURE, ATTR_HUMIDITY]:
-            self._state = round(self._state, 1)
+        self._state = self.brother.data[self.kind]
         return self._state
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        if self.kind == ATTR_CAQI_DESCRIPTION:
-            self._attrs[ATTR_CAQI_ADVICE] = self.data[ATTR_CAQI_ADVICE]
-        if self.kind == ATTR_CAQI:
-            self._attrs[ATTR_CAQI_LEVEL] = self.data[ATTR_CAQI_LEVEL]
-        if self.kind == ATTR_PM25:
-            self._attrs[ATTR_LIMIT] = self.data[ATTR_PM25_LIMIT]
-            self._attrs[ATTR_PERCENT] = round(self.data[ATTR_PM25_PERCENT])
-        if self.kind == ATTR_PM10:
-            self._attrs[ATTR_LIMIT] = self.data[ATTR_PM10_LIMIT]
-            self._attrs[ATTR_PERCENT] = round(self.data[ATTR_PM10_PERCENT])
-        return self._attrs
+    # @property
+    # def device_state_attributes(self):
+    #     """Return the state attributes."""
+    #     if self.kind == ATTR_CAQI_DESCRIPTION:
+    #         self._attrs[ATTR_CAQI_ADVICE] = self.data[ATTR_CAQI_ADVICE]
+    #     if self.kind == ATTR_CAQI:
+    #         self._attrs[ATTR_CAQI_LEVEL] = self.data[ATTR_CAQI_LEVEL]
+    #     if self.kind == ATTR_PM25:
+    #         self._attrs[ATTR_LIMIT] = self.data[ATTR_PM25_LIMIT]
+    #         self._attrs[ATTR_PERCENT] = round(self.data[ATTR_PM25_PERCENT])
+    #     if self.kind == ATTR_PM10:
+    #         self._attrs[ATTR_LIMIT] = self.data[ATTR_PM10_LIMIT]
+    #         self._attrs[ATTR_PERCENT] = round(self.data[ATTR_PM10_PERCENT])
+    #     return self._attrs
 
     @property
     def icon(self):
         """Return the icon."""
-        if self.kind == ATTR_CAQI:
-            if isinstance(self._state, int):
-                if self._state <= 25:
-                    self._icon = "mdi:emoticon-excited"
-                elif self._state <= 50:
-                    self._icon = "mdi:emoticon-happy"
-                elif self._state <= 75:
-                    self._icon = "mdi:emoticon-neutral"
-                elif self._state <= 100:
-                    self._icon = "mdi:emoticon-sad"
-                elif self._state > 100:
-                    self._icon = "mdi:emoticon-dead"
-        else:
-            self._icon = SENSOR_TYPES[self.kind][ATTR_ICON]
-        return self._icon
-
-    @property
-    def device_class(self):
-        """Return the device_class."""
-        return SENSOR_TYPES[self.kind][ATTR_DEVICE_CLASS]
+        return SENSOR_TYPES[self.kind][ATTR_ICON]
 
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{self.airly.latitude}-{self.airly.longitude}-{self.kind.lower()}"
+        return f"{self.brother.serial}_{self.kind}".lower()
 
     @property
     def unit_of_measurement(self):
@@ -209,11 +113,22 @@ class BrotherPrinterSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self.airly.data)
+        return self.brother.available
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self.brother.serial.lower())
+            },
+            "name": self.brother.model,
+            "manufacturer": "Brother",
+            "model": self.brother.model,
+            "sw_version": self.brother.firmware,
+        }
 
     async def async_update(self):
         """Get the data from Airly."""
-        await self.airly.async_update()
-
-        if self.airly.data:
-            self.data = self.airly.data
+        await self.brother.async_update()

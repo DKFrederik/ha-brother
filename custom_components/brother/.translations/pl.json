@@ -4,23 +4,16 @@
     "step": {
       "user": {
         "title": "Drukarka Brother",
-        "description": "Konfiguracja integracji drukarki Brother.  Jeśli masz problem z konfiguracją przejdź na stronę: https://github.com/bieniu/ha-brother",
+        "description": "Konfiguracja integracji drukarki Brother. Jeśli masz problem z konfiguracją przejdź na stronę: https://github.com/bieniu/ha-brother",
         "data": {
-          "name": "Nazwa integracji",
           "host": "Nazwa hosta lub adres IP drukarki"
         }
       }
     },
-    "error": {ieprawidłowa nazwa hosta/adres IP drukarki."
-    }
-  },
-  "options": {
-    "step": {
-      "user": {
-        "data": {
-          "scan_interval": "Częstotliwość aktualizacji [s]"
-        }
-      }
+    "error": {
+      "wrong_address": "Nieprawidłowa nazwa hosta/adres IP drukarki.",
+      "snmp_error": "SNMP Error",
+      "unsupported_model": "Unsupported model"
     }
   }
 }

@@ -1,116 +1,86 @@
 """The Brother component."""
-import logging
-from aiohttp import ClientSession
-from asyncio import TimeoutError
+import asyncio
 from datetime import timedelta
+import logging
 
-from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SCAN_INTERVAL
-from homeassistant.core import Config, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from brother import Brother, SnmpError, UnsupportedModel
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.util import Throttle
 
-from .const import (
-    DATA_CLIENT,
-    DEFAULT_NAME,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-)
+from .const import DEFAULT_NAME, DOMAIN
+
+PLATFORMS = ["sensor"]
+
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
-URL_INFO = "http://{}/general/information.html"
-URL_STATUS = "http://{}/general/status.html"
 
-CONF_MODEL = "model"
-MODEL_HL_L2340DW = "HL-L2340DW"
-
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured Brother."""
+async def async_setup(hass: HomeAssistant, config: dict):
+    """Set up the Brother component."""
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CLIENT] = {}
     return True
 
 
-async def async_setup_entry(hass, config_entry):
-    """Set up Brother as config entry."""
-    host = config_entry.data[CONF_HOST]
-    try:
-        scan_interval = config_entry.options[CONF_SCAN_INTERVAL]
-    except KeyError:
-        scan_interval = DEFAULT_SCAN_INTERVAL
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up Brother from a config entry."""
+    host = entry.data[CONF_HOST]
 
-    websession = async_get_clientsession(hass)
+    brother = BrotherData(host)
 
-    brother = BrotherData(websession, host, scan_interval=timedelta(seconds=scan_interval))
+    hass.data[DOMAIN][entry.entry_id] = brother
 
-    await brother.async_update()
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
-    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = brother
-
-    config_entry.add_update_listener(update_listener)
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    )
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-    return True
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-
-async def update_listener(hass, entry):
-    """Update listener."""
-    await hass.config_entries.async_forward_entry_unload(entry, "sensor")
-    hass.async_add_job(hass.config_entries.async_forward_entry_setup(entry, "sensor"))
+    return unload_ok
 
 
 class BrotherData:
     """Define an object to hold sensor data."""
 
-    def __init__(self, session, host, **kwargs):
+    def __init__(self, host):
         """Initialize."""
+        self._brother = Brother(host)
         self.host = host
         self.model = None
         self.serial = None
+        self.firmware = None
+        self.available = False
         self.data = {}
 
-        self.async_update = Throttle(kwargs[CONF_SCAN_INTERVAL])(self._async_update)
-
-    async def _async_update(self):
-        """Update Brother data."""
-        url = URL_INFO.format(self.host)
+    @Throttle(DEFAULT_SCAN_INTERVAL)
+    async def async_update(self):
+        """Update data via library."""
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as resp:
-                    data = await resp.text()
-        except aiohttp.ClientError as error:
-            _LOGGER.error("Could not fetch data from %s, error: %s", url, error)
+            await self._brother.update()
+        except (SnmpError, UnsupportedModel) as error:
+            _LOGGER.error("Could not fetch data from %s, error: %s", self.host, error)
+            self.data = {}
             return
 
-            values = measurements.current["values"]
-            standards = measurements.current["standards"]
-            index = measurements.current["indexes"][0]
-
-            if index["description"] == NO_AIRLY_SENSORS[self.language]:
-                _LOGGER.error("Can't retrieve data: no Airly sensors in this area")
-                return
-            for value in values:
-                self.data[value["name"]] = value["value"]
-            for standard in standards:
-                self.data[f"{standard['pollutant']}_LIMIT"] = standard["limit"]
-                self.data[f"{standard['pollutant']}_PERCENT"] = standard["percent"]
-            self.data[ATTR_CAQI] = index["value"]
-            self.data[ATTR_CAQI_LEVEL] = index["level"].lower().replace("_", " ")
-            self.data[ATTR_CAQI_DESCRIPTION] = index["description"]
-            self.data[ATTR_CAQI_ADVICE] = index["advice"]
-            _LOGGER.debug("Data retrieved from Airly")
-        except TimeoutError:
-            _LOGGER.error("Asyncio Timeout Error")
-        except (ValueError, AirlyError, ClientConnectorError) as error:
-            _LOGGER.error(error)
-            self.data = {}
+        self.model = self._brother.model
+        self.serial = self._brother.serial
+        self.firmware = self._brother.firmware
+        self.available = self._brother.available
+        self.data = self._brother.data
