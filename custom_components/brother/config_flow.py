@@ -31,7 +31,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(title=brother.model, data=user_input)
             except SnmpError:
-                errors["base"] = "snmp_error"
+                errors["base"] = "wrong_address"
             except UnsupportedModel:
                 errors["base"] = "unsupported_model"
             except Exception:  # pylint: disable=broad-except

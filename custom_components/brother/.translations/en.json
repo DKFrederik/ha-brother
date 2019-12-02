@@ -11,9 +11,8 @@
       }
     },
     "error": {
-      "wrong_address": "Nieprawidłowa nazwa hosta/adres IP drukarki.",
-      "snmp_error": "SNMP Error",
-      "unsupported_model": "Unsupported model"
+      "wrong_address": "Invalid hostname or IP address.",
+      "unsupported_model": "This printer model is not supported."
     }
   }
 }

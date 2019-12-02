@@ -1,7 +1,7 @@
 """The Brother component."""
 import asyncio
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 from brother import Brother, SnmpError, UnsupportedModel
 from homeassistant.config_entries import ConfigEntry
