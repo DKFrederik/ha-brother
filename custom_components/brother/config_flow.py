@@ -27,7 +27,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             brother = Brother(user_input[CONF_HOST])
 
             try:
-                await brother.update()
+                await brother.async_update()
 
                 return self.async_create_entry(title=brother.model, data=user_input)
             except SnmpError:
