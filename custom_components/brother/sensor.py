@@ -27,16 +27,71 @@ SENSOR_TYPES = {
         ATTR_LABEL: "Drum Remaining Life",
         ATTR_UNIT: "%"
     },
-    "printer_count": {
-        ATTR_ICON: "mdi:file-document",
-        ATTR_LABEL: "Printer Count",
-        ATTR_UNIT: "p"
+    "belt_unit_remaining_life": {
+        ATTR_ICON: "mdi:chart-donut",
+        ATTR_LABEL: "Belt Unit Remaining Life",
+        ATTR_UNIT: "%"
+    },
+    "fuser_remaining_life": {
+        ATTR_ICON: "mdi:chart-donut",
+        ATTR_LABEL: "Fuser Remaining Life",
+        ATTR_UNIT: "%"
+    },
+    "laser_remaining_life": {
+        ATTR_ICON: "mdi:chart-donut",
+        ATTR_LABEL: "Laser Remaining Life",
+        ATTR_UNIT: "%"
+    },
+    "pf_kit_1_remaining_life": {
+        ATTR_ICON: "mdi:chart-donut",
+        ATTR_LABEL: "PF Kit 1 Remaining Life",
+        ATTR_UNIT: "%"
+    },
+    "pf_kit_mp_remaining_life": {
+        ATTR_ICON: "mdi:chart-donut",
+        ATTR_LABEL: "PF Kit MP Remaining Life",
+        ATTR_UNIT: "%"
     },
     "black_toner": {
         ATTR_ICON: "mdi:flask-outline",
         ATTR_LABEL: "Black Toner",
         ATTR_UNIT: "%"
-    }
+    },
+    "black_toner_remaining": {
+        ATTR_ICON: "mdi:flask-outline",
+        ATTR_LABEL: "Black Toner Remaining",
+        ATTR_UNIT: "%"
+    },
+    "cyan_toner": {
+        ATTR_ICON: "mdi:flask-outline",
+        ATTR_LABEL: "Cyan Toner",
+        ATTR_UNIT: "%"
+    },
+    "cyan_toner_remaining": {
+        ATTR_ICON: "mdi:flask-outline",
+        ATTR_LABEL: "Cyan Toner Remaining",
+        ATTR_UNIT: "%"
+    },
+    "magenta_toner": {
+        ATTR_ICON: "mdi:flask-outline",
+        ATTR_LABEL: "Magenta Toner",
+        ATTR_UNIT: "%"
+    },
+    "magenta_toner_remaining": {
+        ATTR_ICON: "mdi:flask-outline",
+        ATTR_LABEL: "Magenta Toner Remaining",
+        ATTR_UNIT: "%"
+    },
+    "yellow_toner": {
+        ATTR_ICON: "mdi:flask-outline",
+        ATTR_LABEL: "Yellow Toner",
+        ATTR_UNIT: "%"
+    },
+    "yellow_toner_remaining": {
+        ATTR_ICON: "mdi:flask-outline",
+        ATTR_LABEL: "Yellow Toner Remaining",
+        ATTR_UNIT: "%"
+    },
 }
 
 _LOGGER = logging.getLogger(__name__)
