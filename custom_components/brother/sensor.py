@@ -167,7 +167,6 @@ class BrotherPrinterSensor(Entity):
         """Return the device info."""
         return {
             "identifiers": {
-                # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.brother.serial.lower())
             },
             "name": self.brother.model,
@@ -177,5 +176,5 @@ class BrotherPrinterSensor(Entity):
         }
 
     async def async_update(self):
-        """Get the data from Airly."""
+        """Update the data from printer."""
         await self.brother.async_update()
