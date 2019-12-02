@@ -26,10 +26,15 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             brother = Brother(user_input[CONF_HOST])
 
+            # dodać sprawdzanie regexem nazwy hosta/IP - czy nie ma : albo /
+            # jeśli nie pasuje to raise WrongHost
+
             try:
                 await brother.async_update()
 
                 return self.async_create_entry(title=brother.model, data=user_input)
+            # except WrongHost:
+            #     errors["base"] = "wrong_address"
             except SnmpError:
                 errors["base"] = "wrong_address"
             except UnsupportedModel:
