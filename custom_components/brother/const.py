@@ -30,7 +30,7 @@ UNIT_PAGES = "p"
 SENSOR_TYPES = {
     ATTR_STATUS: {
         ATTR_ICON: "icon:mdi:printer",
-        ATTR_LABEL: ATTR_STATUS.replace("_", " ").title(),
+        ATTR_LABEL: ATTR_STATUS.title(),
         ATTR_UNIT: None,
     },
     ATTR_PRINTER_COUNTER: {
@@ -69,42 +69,42 @@ SENSOR_TYPES = {
         ATTR_UNIT: UNIT_PERCENT,
     },
     ATTR_BLACK_TONER: {
-        ATTR_ICON: "mdi:printer-3d-nozzle-outline",
+        ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_BLACK_TONER.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENT,
     },
     ATTR_BLACK_TONER_REMAINING: {
-        ATTR_ICON: "mdi:printer-3d-nozzle-outline",
+        ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_BLACK_TONER_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENT,
     },
     ATTR_CYAN_TONER: {
-        ATTR_ICON: "mdi:printer-3d-nozzle-outline",
+        ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_CYAN_TONER.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENT,
     },
     ATTR_CYAN_TONER_REMAINING: {
-        ATTR_ICON: "mdi:printer-3d-nozzle-outline",
+        ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_CYAN_TONER_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENT,
     },
     ATTR_MAGENTA_TONER: {
-        ATTR_ICON: "mdi:printer-3d-nozzle-outline",
+        ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_MAGENTA_TONER.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENT,
     },
     ATTR_MAGENTA_TONER_REMAINING: {
-        ATTR_ICON: "mdi:printer-3d-nozzle-outline",
+        ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_MAGENTA_TONER_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENT,
     },
     ATTR_YELLOW_TONER: {
-        ATTR_ICON: "mdi:printer-3d-nozzle-outline",
+        ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_YELLOW_TONER.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENT,
     },
     ATTR_YELLOW_TONER_REMAINING: {
-        ATTR_ICON: "mdi:printer-3d-nozzle-outline",
+        ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_YELLOW_TONER_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENT,
     },
