@@ -5,8 +5,9 @@ from datetime import timedelta
 
 from brother import Brother, SnmpError, UnsupportedModel
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
+from homeassistant.core import Config, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import Throttle
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -18,7 +19,7 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: Config):
     """Set up the Brother component."""
     hass.data[DOMAIN] = {}
     return True
@@ -27,8 +28,14 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Brother from a config entry."""
     host = entry.data[CONF_HOST]
+    kind = entry.data[CONF_TYPE]
 
-    brother = BrotherData(host)
+    brother = BrotherData(host, kind)
+
+    await brother.async_update()
+
+    if not brother.available:
+        raise ConfigEntryNotReady()
 
     hass.data[DOMAIN][entry.entry_id] = brother
 
@@ -59,9 +66,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class BrotherData:
     """Define an object to hold sensor data."""
 
-    def __init__(self, host):
+    def __init__(self, host, kind):
         """Initialize."""
-        self._brother = Brother(host)
+        self._brother = Brother(host, kind=kind)
         self.host = host
         self.model = None
         self.serial = None
@@ -73,10 +80,10 @@ class BrotherData:
     async def async_update(self):
         """Update data via library."""
         try:
-            await self._brother.update()
+            await self._brother.async_update()
         except (SnmpError, UnsupportedModel) as error:
             _LOGGER.error("Could not fetch data from %s, error: %s", self.host, error)
-            self.data = {}
+            self.available = self._brother.available
             return
 
         self.model = self._brother.model

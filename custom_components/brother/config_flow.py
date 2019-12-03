@@ -1,16 +1,43 @@
 """Adds config flow for Brother Printer."""
+import ipaddress
 import logging
+import re
 
 import voluptuous as vol
 from brother import Brother, SnmpError, UnsupportedModel
-from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
+from homeassistant import config_entries, exceptions
+from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.core import callback
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN, PRINTER_TYPES  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST, default=""): str})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST, default=""): str,
+        vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
+    }
+)
+
+
+def host_valid(host):
+    """Return True if hostname or IP address is valid."""
+    try:
+        if ipaddress.ip_address(host).version == (4 or 6):
+            return True
+    except ValueError:
+        disallowed = re.compile(r"[^a-zA-Z\d\-]")
+        return all(map(lambda x: len(x) and not disallowed.search(x), host.split(".")))
+    return False
+
+
+@callback
+def configured_instances(hass, condition):
+    """Return a set of configured Brother instances."""
+    return set(
+        entry.data[condition] for entry in hass.config_entries.async_entries(DOMAIN)
+    )
 
 
 class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -24,14 +51,21 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            brother = Brother(user_input[CONF_HOST])
-
             try:
-                await brother.update()
+                if not host_valid(user_input[CONF_HOST]):
+                    raise InvalidHost()
+                brother = Brother(user_input[CONF_HOST])
+                await brother.async_update()
+                if user_input[CONF_HOST] in configured_instances(self.hass, CONF_HOST):
+                    raise HostExists()
 
                 return self.async_create_entry(title=brother.model, data=user_input)
-            except SnmpError:
+            except InvalidHost:
                 errors["base"] = "wrong_address"
+            except HostExists:
+                errors["base"] = "host_exists"
+            except SnmpError:
+                errors["base"] = "snmp_error"
             except UnsupportedModel:
                 errors["base"] = "unsupported_model"
             except Exception:  # pylint: disable=broad-except
@@ -41,3 +75,11 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+
+class InvalidHost(exceptions.HomeAssistantError):
+    """Error to indicate that hostname/IP address is invalid."""
+
+
+class HostExists(exceptions.HomeAssistantError):
+    """Error to indicate that host is already configured."""

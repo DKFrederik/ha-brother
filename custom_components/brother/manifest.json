@@ -5,6 +5,6 @@
   "dependencies": [],
   "codeowners": ["@bieniu"],
   "homeassistant": "0.98.0",
-  "requirements": ["pysnmp==4.4.12", "brother==0.0.2"],
+  "requirements": ["pysnmp==4.4.12", "brother==0.1.0"],
   "config_flow": true
 }

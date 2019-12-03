@@ -3,91 +3,16 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
-
-ATTR_STATUS = "status"
-ATTR_UNIT = "unit"
-ATTR_LABEL = "label"
-ATTR_ICON = "icon"
-
-SENSOR_TYPES = {
-    ATTR_STATUS: {ATTR_ICON: "icon:mdi:printer", ATTR_LABEL: "Status", ATTR_UNIT: None},
-    "printer_count": {
-        ATTR_ICON: "mdi:file-document",
-        ATTR_LABEL: "Printer Count",
-        ATTR_UNIT: "p",
-    },
-    "drum_remaining_life": {
-        ATTR_ICON: "mdi:chart-donut",
-        ATTR_LABEL: "Drum Remaining Life",
-        ATTR_UNIT: "%",
-    },
-    "belt_unit_remaining_life": {
-        ATTR_ICON: "mdi:chart-donut",
-        ATTR_LABEL: "Belt Unit Remaining Life",
-        ATTR_UNIT: "%",
-    },
-    "fuser_remaining_life": {
-        ATTR_ICON: "mdi:chart-donut",
-        ATTR_LABEL: "Fuser Remaining Life",
-        ATTR_UNIT: "%",
-    },
-    "laser_remaining_life": {
-        ATTR_ICON: "mdi:chart-donut",
-        ATTR_LABEL: "Laser Remaining Life",
-        ATTR_UNIT: "%",
-    },
-    "pf_kit_1_remaining_life": {
-        ATTR_ICON: "mdi:chart-donut",
-        ATTR_LABEL: "PF Kit 1 Remaining Life",
-        ATTR_UNIT: "%",
-    },
-    "pf_kit_mp_remaining_life": {
-        ATTR_ICON: "mdi:chart-donut",
-        ATTR_LABEL: "PF Kit MP Remaining Life",
-        ATTR_UNIT: "%",
-    },
-    "black_toner": {
-        ATTR_ICON: "mdi:flask-outline",
-        ATTR_LABEL: "Black Toner",
-        ATTR_UNIT: "%",
-    },
-    "black_toner_remaining": {
-        ATTR_ICON: "mdi:flask-outline",
-        ATTR_LABEL: "Black Toner Remaining",
-        ATTR_UNIT: "%",
-    },
-    "cyan_toner": {
-        ATTR_ICON: "mdi:flask-outline",
-        ATTR_LABEL: "Cyan Toner",
-        ATTR_UNIT: "%",
-    },
-    "cyan_toner_remaining": {
-        ATTR_ICON: "mdi:flask-outline",
-        ATTR_LABEL: "Cyan Toner Remaining",
-        ATTR_UNIT: "%",
-    },
-    "magenta_toner": {
-        ATTR_ICON: "mdi:flask-outline",
-        ATTR_LABEL: "Magenta Toner",
-        ATTR_UNIT: "%",
-    },
-    "magenta_toner_remaining": {
-        ATTR_ICON: "mdi:flask-outline",
-        ATTR_LABEL: "Magenta Toner Remaining",
-        ATTR_UNIT: "%",
-    },
-    "yellow_toner": {
-        ATTR_ICON: "mdi:flask-outline",
-        ATTR_LABEL: "Yellow Toner",
-        ATTR_UNIT: "%",
-    },
-    "yellow_toner_remaining": {
-        ATTR_ICON: "mdi:flask-outline",
-        ATTR_LABEL: "Yellow Toner Remaining",
-        ATTR_UNIT: "%",
-    },
-}
+from .const import (
+    ATTR_DRUM_COUNTER,
+    ATTR_DRUM_REMAINING_LIFE,
+    ATTR_DRUM_REMAINING_PAGES,
+    ATTR_ICON,
+    ATTR_LABEL,
+    ATTR_UNIT,
+    DOMAIN,
+    SENSOR_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,8 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     name = brother.model
 
-    _LOGGER.debug(brother.model)
-    _LOGGER.debug(brother.data)
+    _LOGGER.debug("Brother printer model: %s", brother.model)
 
     sensors = []
     for sensor in SENSOR_TYPES:
@@ -114,7 +38,7 @@ class BrotherPrinterSensor(Entity):
 
     def __init__(self, data, name, kind):
         """Initialize."""
-        self.brother = data
+        self.printer = data
         self._name = name
         self.kind = kind
         self._state = None
@@ -129,17 +53,19 @@ class BrotherPrinterSensor(Entity):
     @property
     def state(self):
         """Return the state."""
-        self._state = self.brother.data[self.kind]
+        # if self.printer.available:
+        self._state = self.printer.data[self.kind]
         return self._state
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self.kind == "drum_remaining_life":
-            self._attrs["drum_remaining_pages"] = self.brother.data.get(
-                "drum_remaining_pages"
+        # if self.printer.available:
+        if self.kind == ATTR_DRUM_REMAINING_LIFE:
+            self._attrs["remaining_pages"] = self.printer.data.get(
+                ATTR_DRUM_REMAINING_PAGES
             )
-            self._attrs["drum_counter"] = self.brother.data.get("drum_count")
+            self._attrs["counter"] = self.printer.data.get(ATTR_DRUM_COUNTER)
         return self._attrs
 
     @property
@@ -150,7 +76,7 @@ class BrotherPrinterSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{self.brother.serial}_{self.kind}".lower()
+        return f"{self.printer.serial}_{self.kind}".lower()
 
     @property
     def unit_of_measurement(self):
@@ -160,21 +86,19 @@ class BrotherPrinterSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self.brother.available
+        return self.printer.available
 
     @property
     def device_info(self):
         """Return the device info."""
         return {
-            "identifiers": {
-                (DOMAIN, self.brother.serial.lower())
-            },
-            "name": self.brother.model,
+            "identifiers": {(DOMAIN, self.printer.serial.lower())},
+            "name": self.printer.model,
             "manufacturer": "Brother",
-            "model": self.brother.model,
-            "sw_version": self.brother.firmware,
+            "model": self.printer.model,
+            "sw_version": self.printer.firmware,
         }
 
     async def async_update(self):
         """Update the data from printer."""
-        await self.brother.async_update()
+        await self.printer.async_update()
