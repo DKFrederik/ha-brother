@@ -3,9 +3,16 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 
-from .const import (ATTR_DRUM_COUNTER, ATTR_DRUM_REMAINING_LIFE,
-                    ATTR_DRUM_REMAINING_PAGES, ATTR_ICON, ATTR_LABEL,
-                    ATTR_UNIT, DOMAIN, SENSOR_TYPES)
+from .const import (
+    ATTR_DRUM_COUNTER,
+    ATTR_DRUM_REMAINING_LIFE,
+    ATTR_DRUM_REMAINING_PAGES,
+    ATTR_ICON,
+    ATTR_LABEL,
+    ATTR_UNIT,
+    DOMAIN,
+    SENSOR_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +38,7 @@ class BrotherPrinterSensor(Entity):
 
     def __init__(self, data, name, kind):
         """Initialize."""
-        self.brother = data
+        self.printer = data
         self._name = name
         self.kind = kind
         self._state = None
@@ -46,17 +53,19 @@ class BrotherPrinterSensor(Entity):
     @property
     def state(self):
         """Return the state."""
-        self._state = self.brother.data[self.kind]
+        # if self.printer.available:
+        self._state = self.printer.data[self.kind]
         return self._state
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        # if self.printer.available:
         if self.kind == ATTR_DRUM_REMAINING_LIFE:
-            self._attrs["remaining_pages"] = self.brother.data.get(
+            self._attrs["remaining_pages"] = self.printer.data.get(
                 ATTR_DRUM_REMAINING_PAGES
             )
-            self._attrs["counter"] = self.brother.data.get(ATTR_DRUM_COUNTER)
+            self._attrs["counter"] = self.printer.data.get(ATTR_DRUM_COUNTER)
         return self._attrs
 
     @property
@@ -67,7 +76,7 @@ class BrotherPrinterSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{self.brother.serial}_{self.kind}".lower()
+        return f"{self.printer.serial}_{self.kind}".lower()
 
     @property
     def unit_of_measurement(self):
@@ -77,19 +86,19 @@ class BrotherPrinterSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self.brother.available
+        return self.printer.available
 
     @property
     def device_info(self):
         """Return the device info."""
         return {
-            "identifiers": {(DOMAIN, self.brother.serial.lower())},
-            "name": self.brother.model,
+            "identifiers": {(DOMAIN, self.printer.serial.lower())},
+            "name": self.printer.model,
             "manufacturer": "Brother",
-            "model": self.brother.model,
-            "sw_version": self.brother.firmware,
+            "model": self.printer.model,
+            "sw_version": self.printer.firmware,
         }
 
     async def async_update(self):
         """Update the data from printer."""
-        await self.brother.async_update()
+        await self.printer.async_update()
