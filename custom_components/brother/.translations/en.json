@@ -6,7 +6,8 @@
         "title": "Brother Printer",
         "description": "Set up Brother printer integration. If you have problems with configuration go to: https://github.com/bieniu/ha-brother",
         "data": {
-          "host": "Printer hostname or IP address"
+          "host": "Printer hostname or IP address",
+          "type": "Type of the printer"
         }
       }
     },

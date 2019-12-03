@@ -6,25 +6,31 @@ import re
 import voluptuous as vol
 from brother import Brother, SnmpError, UnsupportedModel
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import callback
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN, PRINTER_TYPES  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST, default=""): str})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST, default=""): str,
+        vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
+    }
+)
 
 
 def host_valid(host):
+    """Return True if hostname or IP address is valid."""
     try:
         if ipaddress.ip_address(host).version == (4 or 6):
             return True
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
-        if all(map(lambda x: len(x) and not disallowed.search(x), host.split("."))):
-            return True
-        return False
+        return all(map(lambda x: len(x) and not disallowed.search(x), host.split(".")))
+    return False
+
 
 @callback
 def configured_instances(hass, condition):

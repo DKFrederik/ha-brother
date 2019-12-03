@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from brother import Brother, SnmpError, UnsupportedModel
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import Throttle
 
@@ -27,8 +27,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Brother from a config entry."""
     host = entry.data[CONF_HOST]
+    kind = entry.data[CONF_TYPE]
 
-    brother = BrotherData(host)
+    brother = BrotherData(host, kind)
 
     hass.data[DOMAIN][entry.entry_id] = brother
 
@@ -59,9 +60,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class BrotherData:
     """Define an object to hold sensor data."""
 
-    def __init__(self, host):
+    def __init__(self, host, kind):
         """Initialize."""
-        self._brother = Brother(host)
+        self._brother = Brother(host, kind=kind)
         self.host = host
         self.model = None
         self.serial = None

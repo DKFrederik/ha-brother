@@ -3,7 +3,9 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 
-from .const import *
+from .const import (ATTR_DRUM_COUNTER, ATTR_DRUM_REMAINING_LIFE,
+                    ATTR_DRUM_REMAINING_PAGES, ATTR_ICON, ATTR_LABEL,
+                    ATTR_UNIT, DOMAIN, SENSOR_TYPES)
 
 _LOGGER = logging.getLogger(__name__)
 

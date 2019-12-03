@@ -1,8 +1,8 @@
 """Constants for Brother integration."""
 ATTR_BELT_UNIT_REMAINING_LIFE = "belt_unit_remaining_life"
-ATTR_BLACK_TONER = "black_toner"
+ATTR_BLACK_INK_REMAINING = "black_ink_remaining"
 ATTR_BLACK_TONER_REMAINING = "black_toner_remaining"
-ATTR_CYAN_TONER = "cyan_toner"
+ATTR_CYAN_INK_REMAINING = "cyan_ink_remaining"
 ATTR_CYAN_TONER_REMAINING = "cyan_toner_remaining"
 ATTR_DRUM_COUNTER = "drum_counter"
 ATTR_DRUM_REMAINING_LIFE = "drum_remaining_life"
@@ -11,14 +11,14 @@ ATTR_FUSER_REMAINING_LIFE = "fuser_remaining_life"
 ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_LASER_REMAINING_LIFE = "laser_remaining_life"
-ATTR_MAGENTA_TONER = "magenta_toner"
+ATTR_MAGENTA_INK_REMAINING = "magenta_ink_remaining"
 ATTR_MAGENTA_TONER_REMAINING = "magenta_toner_remaining"
 ATTR_PF_KIT_1_REMAINING_LIFE = "pf_kit_1_remaining_life"
 ATTR_PF_KIT_MP_REMAINING_LIFE = "pf_kit_mp_remaining_life"
 ATTR_PRINTER_COUNTER = "printer_counter"
 ATTR_STATUS = "status"
 ATTR_UNIT = "unit"
-ATTR_YELLOW_TONER = "yellow_toner"
+ATTR_YELLOW_INK_REMAINING = "yellow_ink_remaining"
 ATTR_YELLOW_TONER_REMAINING = "yellow_toner_remaining"
 
 DEFAULT_NAME = "Brother Printer"
@@ -26,6 +26,8 @@ DOMAIN = "brother"
 
 UNIT_PERCENT = "%"
 UNIT_PAGES = "p"
+
+PRINTER_TYPES = ["laser", "ink"]
 
 SENSOR_TYPES = {
     ATTR_STATUS: {
@@ -68,19 +70,9 @@ SENSOR_TYPES = {
         ATTR_LABEL: ATTR_PF_KIT_MP_REMAINING_LIFE.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENT,
     },
-    ATTR_BLACK_TONER: {
-        ATTR_ICON: "mdi:printer-3d-nozzle",
-        ATTR_LABEL: ATTR_BLACK_TONER.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENT,
-    },
     ATTR_BLACK_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_BLACK_TONER_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENT,
-    },
-    ATTR_CYAN_TONER: {
-        ATTR_ICON: "mdi:printer-3d-nozzle",
-        ATTR_LABEL: ATTR_CYAN_TONER.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENT,
     },
     ATTR_CYAN_TONER_REMAINING: {
@@ -88,24 +80,34 @@ SENSOR_TYPES = {
         ATTR_LABEL: ATTR_CYAN_TONER_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENT,
     },
-    ATTR_MAGENTA_TONER: {
-        ATTR_ICON: "mdi:printer-3d-nozzle",
-        ATTR_LABEL: ATTR_MAGENTA_TONER.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENT,
-    },
     ATTR_MAGENTA_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_MAGENTA_TONER_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENT,
     },
-    ATTR_YELLOW_TONER: {
-        ATTR_ICON: "mdi:printer-3d-nozzle",
-        ATTR_LABEL: ATTR_YELLOW_TONER.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENT,
-    },
     ATTR_YELLOW_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_YELLOW_TONER_REMAINING.replace("_", " ").title(),
+        ATTR_UNIT: UNIT_PERCENT,
+    },
+    ATTR_BLACK_INK_REMAINING: {
+        ATTR_ICON: "mdi:printer-3d-nozzle",
+        ATTR_LABEL: ATTR_BLACK_INK_REMAINING.replace("_", " ").title(),
+        ATTR_UNIT: UNIT_PERCENT,
+    },
+    ATTR_CYAN_INK_REMAINING: {
+        ATTR_ICON: "mdi:printer-3d-nozzle",
+        ATTR_LABEL: ATTR_CYAN_INK_REMAINING.replace("_", " ").title(),
+        ATTR_UNIT: UNIT_PERCENT,
+    },
+    ATTR_MAGENTA_INK_REMAINING: {
+        ATTR_ICON: "mdi:printer-3d-nozzle",
+        ATTR_LABEL: ATTR_MAGENTA_INK_REMAINING.replace("_", " ").title(),
+        ATTR_UNIT: UNIT_PERCENT,
+    },
+    ATTR_YELLOW_INK_REMAINING: {
+        ATTR_ICON: "mdi:printer-3d-nozzle",
+        ATTR_LABEL: ATTR_YELLOW_INK_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENT,
     },
 }

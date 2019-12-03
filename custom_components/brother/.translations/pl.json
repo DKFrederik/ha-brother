@@ -6,7 +6,8 @@
         "title": "Drukarka Brother",
         "description": "Konfiguracja integracji drukarki Brother. Jeśli masz problem z konfiguracją przejdź na stronę: https://github.com/bieniu/ha-brother",
         "data": {
-          "host": "Nazwa hosta lub adres IP drukarki"
+          "host": "Nazwa hosta lub adres IP drukarki",
+          "type": "Typ drukarki"
         }
       }
     },
