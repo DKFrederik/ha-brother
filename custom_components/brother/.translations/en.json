@@ -12,6 +12,7 @@
     },
     "error": {
       "wrong_address": "Invalid hostname or IP address.",
+      "snmp_error": "SNMP error. Printer turned off or not supported.",
       "unsupported_model": "This printer model is not supported."
     }
   }

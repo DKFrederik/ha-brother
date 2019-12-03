@@ -12,6 +12,7 @@
     },
     "error": {
       "wrong_address": "Nieprawidłowa nazwa hosta lub adres IP.",
+      "snmp_error": "Błąd SNMP. Drukarka jest wyłączona lub ten model nie jest obsługiwany.",
       "unsupported_model": "Ten model drukarki nie jest obsługiwany."
     }
   }
