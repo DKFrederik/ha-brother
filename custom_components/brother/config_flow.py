@@ -7,6 +7,7 @@ import voluptuous as vol
 from brother import Brother, SnmpError, UnsupportedModel
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -25,6 +26,13 @@ def host_valid(host):
             return True
         return False
 
+@callback
+def configured_instances(hass, condition):
+    """Return a set of configured Brother instances."""
+    return set(
+        entry.data[condition] for entry in hass.config_entries.async_entries(DOMAIN)
+    )
+
 
 class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Brother Printer."""
@@ -42,10 +50,14 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     raise InvalidHost()
                 brother = Brother(user_input[CONF_HOST])
                 await brother.async_update()
+                if user_input[CONF_HOST] in configured_instances(self.hass, CONF_HOST):
+                    raise HostExists()
 
                 return self.async_create_entry(title=brother.model, data=user_input)
             except InvalidHost:
                 errors["base"] = "wrong_address"
+            except HostExists:
+                errors["base"] = "host_exists"
             except SnmpError:
                 errors["base"] = "snmp_error"
             except UnsupportedModel:
@@ -61,3 +73,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class InvalidHost(exceptions.HomeAssistantError):
     """Error to indicate that hostname/IP address is invalid."""
+
+
+class HostExists(exceptions.HomeAssistantError):
+    """Error to indicate that host is already configured."""
