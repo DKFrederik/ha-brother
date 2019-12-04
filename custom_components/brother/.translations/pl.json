@@ -6,12 +6,14 @@
         "title": "Drukarka Brother",
         "description": "Konfiguracja integracji drukarki Brother. Jeśli masz problem z konfiguracją przejdź na stronę: https://github.com/bieniu/ha-brother",
         "data": {
+          "name": "Nazwa integracji",
           "host": "Nazwa hosta lub adres IP drukarki",
           "type": "Typ drukarki"
         }
       }
     },
     "error": {
+      "name_exists": "Nazwa już istnieje.",
       "wrong_address": "Nieprawidłowa nazwa hosta lub adres IP.",
       "host_exists": "Host jest już skonfigurowany.",
       "snmp_error": "Błąd SNMP. Drukarka jest wyłączona lub ten model nie jest obsługiwany.",

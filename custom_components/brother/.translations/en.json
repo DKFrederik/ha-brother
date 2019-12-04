@@ -6,12 +6,14 @@
         "title": "Brother Printer",
         "description": "Set up Brother printer integration. If you have problems with configuration go to: https://github.com/bieniu/ha-brother",
         "data": {
+          "name": "Name of the integration",
           "host": "Printer hostname or IP address",
           "type": "Type of the printer"
         }
       }
     },
     "error": {
+      "name_exists": "Name already exists.",
       "wrong_address": "Invalid hostname or IP address.",
       "host_exists": "Host is already configured.",
       "snmp_error": "SNMP error. Printer turned off or not supported.",

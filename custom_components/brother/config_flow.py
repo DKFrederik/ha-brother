@@ -6,15 +6,16 @@ import re
 import voluptuous as vol
 from brother import Brother, SnmpError, UnsupportedModel
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
 
-from .const import DOMAIN, PRINTER_TYPES  # pylint:disable=unused-import
+from .const import DEFAULT_NAME, DOMAIN, PRINTER_TYPES  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST, default=""): str,
         vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
     }
@@ -56,14 +57,18 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     raise InvalidHost()
                 brother = Brother(user_input[CONF_HOST])
                 await brother.async_update()
+                if user_input[CONF_NAME] in configured_instances(self.hass, CONF_NAME):
+                    raise NameExists()
                 if user_input[CONF_HOST] in configured_instances(self.hass, CONF_HOST):
                     raise HostExists()
 
                 return self.async_create_entry(title=brother.model, data=user_input)
             except InvalidHost:
-                errors["base"] = "wrong_address"
+                errors[CONF_HOST] = "wrong_address"
+            except NameExists:
+                errors[CONF_NAME] = "name_exists"
             except HostExists:
-                errors["base"] = "host_exists"
+                errors[CONF_HOST] = "host_exists"
             except SnmpError:
                 errors["base"] = "snmp_error"
             except UnsupportedModel:
@@ -79,6 +84,10 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class InvalidHost(exceptions.HomeAssistantError):
     """Error to indicate that hostname/IP address is invalid."""
+
+
+class NameExists(exceptions.HomeAssistantError):
+    """Error to indicate that name is already configured."""
 
 
 class HostExists(exceptions.HomeAssistantError):
