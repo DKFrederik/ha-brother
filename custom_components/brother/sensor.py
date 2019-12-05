@@ -24,7 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await brother.async_update()
 
     name = config_entry.data[CONF_NAME]
-    
+
     _LOGGER.debug("Brother printer model: %s", brother.model)
 
     sensors = []

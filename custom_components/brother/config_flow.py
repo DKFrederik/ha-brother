@@ -62,7 +62,9 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if user_input[CONF_HOST] in configured_instances(self.hass, CONF_HOST):
                     raise HostExists()
 
-                return self.async_create_entry(title=brother.model, data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_address"
             except NameExists:
