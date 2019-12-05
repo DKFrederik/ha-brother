@@ -16,7 +16,6 @@
       "name_exists": "Nazwa już istnieje.",
       "wrong_host": "Nieprawidłowa nazwa hosta lub adres IP.",
       "connection_error": "Błąd połączenia.",
-      "host_exists": "Host jest już skonfigurowany.",
       "device_exists": "Urządzenie jest juz skonfigurowane.",
       "snmp_error": "Serwer SNMP jest wyłączony lub model drukarki nie jest obsługiwany.",
       "unsupported_model": "Ten model drukarki nie jest obsługiwany."

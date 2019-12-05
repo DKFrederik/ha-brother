@@ -16,7 +16,6 @@
       "name_exists": "Name already exists.",
       "wrong_host": "Invalid hostname or IP address.",
       "connection_error": "Connection error.",
-      "host_exists": "Host is already configured.",
       "device_exists": "Device is already configured.",
       "snmp_error": "SNMP server turned off or printer not supported.",
       "unsupported_model": "This printer model is not supported."

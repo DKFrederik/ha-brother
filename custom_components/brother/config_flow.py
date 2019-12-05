@@ -68,8 +68,6 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await brother.async_update()
                 if user_input[CONF_NAME] in configured_instances(self.hass, CONF_NAME):
                     raise NameExists()
-                if user_input[CONF_HOST] in configured_instances(self.hass, CONF_HOST):
-                    raise HostExists()
                 if await configured_devices(self.hass, brother.serial.lower()):
                     raise DeviceExists()
 
@@ -82,8 +80,6 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "connection_error"
             except NameExists:
                 errors[CONF_NAME] = "name_exists"
-            except HostExists:
-                errors[CONF_HOST] = "host_exists"
             except DeviceExists:
                 errors["base"] = "device_exists"
             except SnmpError:
@@ -105,10 +101,6 @@ class InvalidHost(exceptions.HomeAssistantError):
 
 class NameExists(exceptions.HomeAssistantError):
     """Error to indicate that name is already configured."""
-
-
-class HostExists(exceptions.HomeAssistantError):
-    """Error to indicate that host is already configured."""
 
 
 class DeviceExists(exceptions.HomeAssistantError):
