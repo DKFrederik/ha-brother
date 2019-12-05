@@ -81,7 +81,7 @@ class BrotherData:
         """Update data via library."""
         try:
             await self._brother.async_update()
-        except (SnmpError, UnsupportedModel) as error:
+        except (ConnectionError, SnmpError, UnsupportedModel) as error:
             _LOGGER.error("Could not fetch data from %s, error: %s", self.host, error)
             self.available = self._brother.available
             return

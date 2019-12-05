@@ -8,6 +8,7 @@ from brother import Brother, SnmpError, UnsupportedModel
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry
 
 from .const import DEFAULT_NAME, DOMAIN, PRINTER_TYPES  # pylint:disable=unused-import
 
@@ -32,6 +33,14 @@ def host_valid(host):
         return all(map(lambda x: len(x) and not disallowed.search(x), host.split(".")))
     return False
 
+async def configured_devices(hass, serial):
+    """Return True if deice is already configured."""
+    d_registry = await device_registry.async_get_registry(hass)
+    for device in d_registry.devices.values():
+        for item in device.identifiers:
+            if serial in item:
+                return True
+    return False
 
 @callback
 def configured_instances(hass, condition):
@@ -61,16 +70,22 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     raise NameExists()
                 if user_input[CONF_HOST] in configured_instances(self.hass, CONF_HOST):
                     raise HostExists()
+                if await configured_devices(self.hass, brother.serial.lower()):
+                    raise DeviceExists()
 
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
             except InvalidHost:
-                errors[CONF_HOST] = "wrong_address"
+                errors[CONF_HOST] = "wrong_host"
+            except ConnectionError:
+                errors["base"] = "connection_error"
             except NameExists:
                 errors[CONF_NAME] = "name_exists"
             except HostExists:
                 errors[CONF_HOST] = "host_exists"
+            except DeviceExists:
+                errors["base"] = "device_exists"
             except SnmpError:
                 errors["base"] = "snmp_error"
             except UnsupportedModel:
@@ -94,3 +109,7 @@ class NameExists(exceptions.HomeAssistantError):
 
 class HostExists(exceptions.HomeAssistantError):
     """Error to indicate that host is already configured."""
+
+
+class DeviceExists(exceptions.HomeAssistantError):
+    """Error to indicate that device is already configured."""

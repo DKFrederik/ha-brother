@@ -54,14 +54,12 @@ class BrotherPrinterSensor(Entity):
     @property
     def state(self):
         """Return the state."""
-        # if self.printer.available:
         self._state = self.printer.data[self.kind]
         return self._state
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        # if self.printer.available:
         if self.kind == ATTR_DRUM_REMAINING_LIFE:
             self._attrs["remaining_pages"] = self.printer.data.get(
                 ATTR_DRUM_REMAINING_PAGES

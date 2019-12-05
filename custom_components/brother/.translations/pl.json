@@ -14,9 +14,11 @@
     },
     "error": {
       "name_exists": "Nazwa już istnieje.",
-      "wrong_address": "Nieprawidłowa nazwa hosta lub adres IP.",
+      "wrong_host": "Nieprawidłowa nazwa hosta lub adres IP.",
+      "connection_error": "Błąd połączenia.",
       "host_exists": "Host jest już skonfigurowany.",
-      "snmp_error": "Nieprawidłowy host lub drukarka jest wyłączona lub ten model nie jest obsługiwany.",
+      "device_exists": "Urządzenie jest juz skonfigurowane.",
+      "snmp_error": "Serwer SNMP jest wyłączony lub model drukarki nie jest obsługiwany.",
       "unsupported_model": "Ten model drukarki nie jest obsługiwany."
     }
   }
