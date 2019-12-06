@@ -34,8 +34,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await brother.async_update()
 
-    if not brother.available:
-        raise ConfigEntryNotReady()
+    # if not brother.available:
+    #     raise ConfigEntryNotReady()
 
     hass.data[DOMAIN][entry.entry_id] = brother
 

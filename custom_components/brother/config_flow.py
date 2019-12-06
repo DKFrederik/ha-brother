@@ -33,6 +33,7 @@ def host_valid(host):
         return all(map(lambda x: len(x) and not disallowed.search(x), host.split(".")))
     return False
 
+
 async def configured_devices(hass, serial):
     """Return True if deice is already configured."""
     d_registry = await device_registry.async_get_registry(hass)
@@ -41,6 +42,7 @@ async def configured_devices(hass, serial):
             if serial in item:
                 return True
     return False
+
 
 @callback
 def configured_instances(hass, condition):
