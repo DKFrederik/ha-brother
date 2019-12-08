@@ -3,8 +3,9 @@ import ipaddress
 import logging
 import re
 
-import voluptuous as vol
 from brother import Brother, SnmpError, UnsupportedModel
+import voluptuous as vol
+
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
