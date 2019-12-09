@@ -98,11 +98,11 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except NameExists:
                 errors[CONF_NAME] = "name_exists"
             except DeviceExists:
-                errors["base"] = "device_exists"
+                return self.async_abort(reason="device_exists")
             except SnmpError:
                 errors["base"] = "snmp_error"
             except UnsupportedModel:
-                errors["base"] = "unsupported_model"
+                return self.async_abort(reason="unsupported_model")
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
