@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     host = entry.data[CONF_HOST]
     kind = entry.data[CONF_TYPE]
 
-    brother = BrotherData(host, kind)
+    brother = BrotherPrinterData(host, kind)
 
     await brother.async_update()
 
@@ -61,7 +61,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-class BrotherData:
+class BrotherPrinterData:
     """Define an object to hold sensor data."""
 
     def __init__(self, host, kind):
