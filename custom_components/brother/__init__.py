@@ -1,9 +1,10 @@
 """The Brother component."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 from brother import Brother, SnmpError, UnsupportedModel
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
 from homeassistant.core import Config, HomeAssistant
@@ -30,12 +31,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     host = entry.data[CONF_HOST]
     kind = entry.data[CONF_TYPE]
 
-    brother = BrotherData(host, kind)
+    brother = BrotherPrinterData(host, kind)
 
     await brother.async_update()
-
-    if not brother.available:
-        raise ConfigEntryNotReady()
 
     hass.data[DOMAIN][entry.entry_id] = brother
 
@@ -63,7 +61,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-class BrotherData:
+class BrotherPrinterData:
     """Define an object to hold sensor data."""
 
     def __init__(self, host, kind):
@@ -75,15 +73,23 @@ class BrotherData:
         self.firmware = None
         self.available = False
         self.data = {}
+        self.error_logged = False
 
     @Throttle(DEFAULT_SCAN_INTERVAL)
     async def async_update(self):
         """Update data via library."""
         try:
             await self._brother.async_update()
-        except (SnmpError, UnsupportedModel) as error:
-            _LOGGER.error("Could not fetch data from %s, error: %s", self.host, error)
+        except (ConnectionError, SnmpError, UnsupportedModel) as error:
+            if not self.error_logged:
+                _LOGGER.error(
+                    "Could not fetch data from %s, error: %s", self.host, error
+                )
+                self.error_logged = True
             self.available = self._brother.available
+            if self.available and self.error_logged:
+                _LOGGER.info("Printer is available again.")
+                self.error_logged = False
             return
 
         self.model = self._brother.model

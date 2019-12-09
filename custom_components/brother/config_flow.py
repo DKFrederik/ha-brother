@@ -3,18 +3,28 @@ import ipaddress
 import logging
 import re
 
-import voluptuous as vol
 from brother import Brother, SnmpError, UnsupportedModel
-from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_HOST, CONF_TYPE
-from homeassistant.core import callback
+import voluptuous as vol
 
-from .const import DOMAIN, PRINTER_TYPES  # pylint:disable=unused-import
+from homeassistant import config_entries, exceptions
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
+from homeassistant.core import callback
+from homeassistant.helpers import device_registry
+
+from .const import (  # pylint:disable=unused-import
+    DEFAULT_NAME,
+    DOMAIN,
+    CONF_SENSORS,
+    CONF_SERIAL,
+    PRINTER_TYPES,
+    SENSOR_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST, default=""): str,
         vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
     }
@@ -29,6 +39,16 @@ def host_valid(host):
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
         return all(map(lambda x: len(x) and not disallowed.search(x), host.split(".")))
+    return False
+
+
+async def configured_devices(hass, serial):
+    """Return True if deice is already configured."""
+    d_registry = await device_registry.async_get_registry(hass)
+    for device in d_registry.devices.values():
+        for item in device.identifiers:
+            if serial in item:
+                return True
     return False
 
 
@@ -56,18 +76,33 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     raise InvalidHost()
                 brother = Brother(user_input[CONF_HOST])
                 await brother.async_update()
-                if user_input[CONF_HOST] in configured_instances(self.hass, CONF_HOST):
-                    raise HostExists()
+                if user_input[CONF_NAME] in configured_instances(self.hass, CONF_NAME):
+                    raise NameExists()
+                if await configured_devices(self.hass, brother.serial.lower()):
+                    raise DeviceExists()
 
-                return self.async_create_entry(title=brother.model, data=user_input)
+                sensors = []
+                for sensor in SENSOR_TYPES:
+                    if sensor in brother.data:
+                        sensors.append(sensor)
+
+                user_input[CONF_SERIAL] = brother.serial.lower()
+                user_input[CONF_SENSORS] = sensors
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
             except InvalidHost:
-                errors["base"] = "wrong_address"
-            except HostExists:
-                errors["base"] = "host_exists"
+                errors[CONF_HOST] = "wrong_host"
+            except ConnectionError:
+                errors["base"] = "connection_error"
+            except NameExists:
+                errors[CONF_NAME] = "name_exists"
+            except DeviceExists:
+                return self.async_abort(reason="device_exists")
             except SnmpError:
                 errors["base"] = "snmp_error"
             except UnsupportedModel:
-                errors["base"] = "unsupported_model"
+                return self.async_abort(reason="unsupported_model")
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -81,5 +116,9 @@ class InvalidHost(exceptions.HomeAssistantError):
     """Error to indicate that hostname/IP address is invalid."""
 
 
-class HostExists(exceptions.HomeAssistantError):
-    """Error to indicate that host is already configured."""
+class NameExists(exceptions.HomeAssistantError):
+    """Error to indicate that name is already configured."""
+
+
+class DeviceExists(exceptions.HomeAssistantError):
+    """Error to indicate that device is already configured."""
