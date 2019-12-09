@@ -11,7 +11,14 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry
 
-from .const import DEFAULT_NAME, DOMAIN, PRINTER_TYPES  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    DEFAULT_NAME,
+    DOMAIN,
+    CONF_SENSORS,
+    CONF_SERIAL,
+    PRINTER_TYPES,
+    SENSOR_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,6 +81,13 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if await configured_devices(self.hass, brother.serial.lower()):
                     raise DeviceExists()
 
+                sensors = []
+                for sensor in SENSOR_TYPES:
+                    if sensor in brother.data:
+                        sensors.append(sensor)
+
+                user_input[CONF_SERIAL] = brother.serial.lower()
+                user_input[CONF_SENSORS] = sensors
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )

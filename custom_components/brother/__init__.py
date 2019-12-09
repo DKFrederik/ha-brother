@@ -35,9 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await brother.async_update()
 
-    # if not brother.available:
-    #     raise ConfigEntryNotReady()
-
     hass.data[DOMAIN][entry.entry_id] = brother
 
     for component in PLATFORMS:
@@ -76,6 +73,7 @@ class BrotherData:
         self.firmware = None
         self.available = False
         self.data = {}
+        self.error_logged = False
 
     @Throttle(DEFAULT_SCAN_INTERVAL)
     async def async_update(self):
@@ -83,8 +81,15 @@ class BrotherData:
         try:
             await self._brother.async_update()
         except (ConnectionError, SnmpError, UnsupportedModel) as error:
-            _LOGGER.error("Could not fetch data from %s, error: %s", self.host, error)
+            if not self.error_logged:
+                _LOGGER.error(
+                    "Could not fetch data from %s, error: %s", self.host, error
+                )
+                self.error_logged = True
             self.available = self._brother.available
+            if self.available and self.error_logged:
+                _LOGGER.info("Printer is available again.")
+                self.error_logged = False
             return
 
         self.model = self._brother.model

@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.const import CONF_NAME
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -12,6 +12,8 @@ from .const import (
     ATTR_ICON,
     ATTR_LABEL,
     ATTR_UNIT,
+    CONF_SENSORS,
+    CONF_SERIAL,
     DOMAIN,
     SENSOR_TYPES,
 )
@@ -22,17 +24,26 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add Brother entities from a config_entry."""
     brother = hass.data[DOMAIN][config_entry.entry_id]
-    await brother.async_update()
 
     name = config_entry.data[CONF_NAME]
-
+    serial = config_entry.data[CONF_SERIAL]
+    sensors_list = config_entry.data[CONF_SENSORS]
     sensors = []
 
-    if not brother.available:
+    if brother.available:
+        device_info = {
+            "identifiers": {(DOMAIN, serial)},
+            "name": brother.model,
+            "manufacturer": "Brother",
+            "model": brother.model,
+            "sw_version": brother.firmware,
+        }
+    else:
+        _LOGGER.info("Printer is unavailable, reading device info from registry.")
         dev_reg = await device_registry.async_get_registry(hass)
         for device in dev_reg.devices.values():
             if config_entry.entry_id in device.config_entries:
-                _device_info = {
+                device_info = {
                     "name": device.name,
                     "model": device.model,
                     "identifiers": device.identifiers,
@@ -40,45 +51,27 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     "sw_version": device.sw_version,
                 }
                 break
-        reg_serial = next(iter(_device_info["identifiers"]))[1]
-        reg_sensors = []
-        ent_reg = await entity_registry.async_get_registry(hass)
-        for entry in ent_reg.entities.items():
-            if entry[1].config_entry_id == config_entry.entry_id:
-                reg_sensors.append(entry[1].unique_id.replace(reg_serial + "_", ""))
-        for sensor in reg_sensors:
-            sensors.append(BrotherPrinterSensor(brother, name, sensor, _device_info))
-    else:
-        for sensor in SENSOR_TYPES:
-            if sensor in brother.data:
-                sensors.append(BrotherPrinterSensor(brother, name, sensor))
+
+    for sensor in sensors_list:
+        unique_id = f"{serial}_{sensor}"
+        sensors.append(
+            BrotherPrinterSensor(brother, name, sensor, device_info, unique_id)
+        )
     async_add_entities(sensors, True)
 
 
 class BrotherPrinterSensor(Entity):
     """Define an Brother Printer sensor."""
 
-    def __init__(self, data, name, kind, device_info=None):
+    def __init__(self, data, name, kind, device_info, unique_id):
         """Initialize."""
         self.printer = data
         self._name = name
+        self._device_info = device_info
+        self._unique_id = unique_id
         self.kind = kind
         self._state = None
         self._unit_of_measurement = None
-        if device_info:
-            self._device_info = device_info
-            serial = next(iter(device_info["identifiers"]))[1]
-            self._unique_id = f"{serial}_{self.kind}"
-        else:
-            self._device_info = {
-                "identifiers": {(DOMAIN, self.printer.serial.lower())},
-                "name": self.printer.model,
-                "manufacturer": "Brother",
-                "model": self.printer.model,
-                "sw_version": self.printer.firmware,
-            }
-            self._unique_id = f"{self.printer.serial}_{self.kind}".lower()
-
         self._attrs = {}
 
     @property
@@ -110,7 +103,7 @@ class BrotherPrinterSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return
+        return self._unique_id
 
     @property
     def unit_of_measurement(self):
