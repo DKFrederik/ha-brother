@@ -86,10 +86,14 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if sensor in brother.data:
                         sensors.append(sensor)
 
-                user_input[CONF_SERIAL] = brother.serial.lower()
-                user_input[CONF_SENSORS] = sensors
+                device_data = {
+                    CONF_SERIAL: brother.serial.lower(),
+                    CONF_SENSORS: sensors,
+                }
                 title = f"{brother.model} {brother.serial}"
-                return self.async_create_entry(title=title, data=user_input)
+                return self.async_create_entry(
+                    title=title, data={**user_input, **device_data}
+                )
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
             except ConnectionError:
