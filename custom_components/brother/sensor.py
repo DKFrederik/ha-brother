@@ -27,10 +27,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     name = config_entry.data[CONF_NAME]
     sensors = []
+    sensors_list = []
 
     if brother.available:
         serial = brother.serial
-        sensors_list = brother.data.keys()
+        for sensor in SENSOR_TYPES:
+            if sensor in brother.data:
+                sensors_list.append(sensor)
         device_info = {
             "identifiers": {(DOMAIN, serial)},
             "name": brother.model,
