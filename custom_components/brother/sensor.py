@@ -11,6 +11,7 @@ from .const import (
     ATTR_DRUM_REMAINING_PAGES,
     ATTR_ICON,
     ATTR_LABEL,
+    ATTR_MANUFACTURER,
     ATTR_UNIT,
     CONF_SENSORS,
     CONF_SERIAL,
@@ -30,14 +31,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensors_list = []
 
     if brother.available:
-        serial = brother.serial
+        serial = brother.serial.lower()
         for sensor in SENSOR_TYPES:
             if sensor in brother.data:
                 sensors_list.append(sensor)
         device_info = {
             "identifiers": {(DOMAIN, serial)},
             "name": brother.model,
-            "manufacturer": "Brother",
+            "manufacturer": ATTR_MANUFACTURER,
             "model": brother.model,
             "sw_version": brother.firmware,
         }
