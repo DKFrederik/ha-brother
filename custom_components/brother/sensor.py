@@ -14,7 +14,6 @@ from .const import (
     ATTR_MANUFACTURER,
     ATTR_UNIT,
     CONF_SENSORS,
-    CONF_SERIAL,
     DOMAIN,
     SENSOR_TYPES,
 )
@@ -31,12 +30,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensors_list = []
 
     if brother.available:
-        serial = brother.serial.lower()
         for sensor in SENSOR_TYPES:
             if sensor in brother.data:
                 sensors_list.append(sensor)
         device_info = {
-            "identifiers": {(DOMAIN, serial)},
+            "identifiers": {(DOMAIN, brother.serial)},
             "name": brother.model,
             "manufacturer": ATTR_MANUFACTURER,
             "model": brother.model,
@@ -44,7 +42,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         }
     else:
         _LOGGER.info("Printer is unavailable, reading device info from registry.")
-        serial = config_entry.data[CONF_SERIAL]
         sensors_list = config_entry.data[CONF_SENSORS]
         dev_reg = await device_registry.async_get_registry(hass)
         for device in dev_reg.devices.values():
@@ -59,9 +56,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 break
 
     for sensor in sensors_list:
-        unique_id = f"{serial}_{sensor}"
         sensors.append(
-            BrotherPrinterSensor(brother, name, sensor, device_info, unique_id)
+            BrotherPrinterSensor(brother, name, sensor, device_info)
         )
     async_add_entities(sensors, True)
 
@@ -69,12 +65,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BrotherPrinterSensor(Entity):
     """Define an Brother Printer sensor."""
 
-    def __init__(self, data, name, kind, device_info, unique_id):
+    def __init__(self, data, name, kind, device_info):
         """Initialize."""
         self.printer = data
         self._name = name
         self._device_info = device_info
-        self._unique_id = unique_id
+        self.serial = next(iter(device_info["identifiers"]))[1]
+        self._unique_id = f"{self.serial.lower()}_{kind}"
         self.kind = kind
         self._state = None
         self._unit_of_measurement = None
@@ -129,3 +126,12 @@ class BrotherPrinterSensor(Entity):
     async def async_update(self):
         """Update the data from printer."""
         await self.printer.async_update()
+
+        if self.printer.available:
+            self._device_info = {
+                "identifiers": {(DOMAIN, self.printer.serial)},
+                "name": self.printer.model,
+                "manufacturer": ATTR_MANUFACTURER,
+                "model": self.printer.model,
+                "sw_version": self.printer.firmware,
+            }
