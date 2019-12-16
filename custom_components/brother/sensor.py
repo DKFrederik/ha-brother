@@ -56,9 +56,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 break
 
     for sensor in sensors_list:
-        sensors.append(
-            BrotherPrinterSensor(brother, name, sensor, device_info)
-        )
+        sensors.append(BrotherPrinterSensor(brother, name, sensor, device_info))
     async_add_entities(sensors, True)
 
 
